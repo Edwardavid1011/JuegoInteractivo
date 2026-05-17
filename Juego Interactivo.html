@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colombia en Juego — Folclor Interactivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;800;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde: #00C98B;
+  --verde-oscuro: #007A54;
+  --verde-claro: #DDFFF4;
+  --amarillo: #FFD600;
+  --amarillo-oscuro: #B89A00;
+  --morado: #7C6FCD;
+  --morado-claro: #EAE7FF;
+  --naranja: #FF5733;
+  --naranja-claro: #FFF0EC;
+  --azul: #3D9BE9;
+  --rosa: #FF6FAE;
+  --fondo: #0D1B2A;
+  --fondo2: #132233;
+  --blanco: #FFFFFF;
+  --texto: #1a1a1a;
+  --texto-suave: #5a5a5a;
+  --radio: 16px;
+  --pixel: 'Press Start 2P', monospace;
+  --round: 'Nunito', sans-serif;
+  --body: 'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes slideIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes pop { 0%{transform:scale(0.8);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+@keyframes starFloat { 0%{opacity:0;transform:translateY(0) scale(0)} 50%{opacity:1} 100%{opacity:0;transform:translateY(-60px) scale(1.5)} }
+@keyframes sparkle { 0%,100%{opacity:0;transform:scale(0) rotate(0deg)} 50%{opacity:1;transform:scale(1) rotate(180deg)} }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-12px)} 60%{transform:translateY(-6px)} }
+@keyframes glow { 0%,100%{box-shadow:0 0 8px var(--amarillo)} 50%{box-shadow:0 0 24px var(--amarillo),0 0 40px #ffaa0055} }
+@keyframes confettiFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(180px) rotate(720deg);opacity:0} }
+@keyframes scanline { 0%{background-position:0 0} 100%{background-position:0 100px} }
+
+body {
+  font-family: var(--body);
+  background: var(--fondo);
+  color: var(--blanco);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.5rem 1rem 4rem;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0,201,139,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(124,111,205,0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Estrellas de fondo */
+.stars-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute;
+  width: 3px; height: 3px;
+  background: #fff;
+  border-radius: 50%;
+  opacity: 0.4;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.game-container {
+  width: 100%;
+  max-width: 680px;
+  position: relative;
+  z-index: 1;
+}
+
+.screen { display: none; }
+.screen.active { display: block; animation: slideIn 0.3s ease; }
+
+/* ── HUD PUNTAJE FLOTANTE ── */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.hud-score {
+  font-family: var(--pixel);
+  font-size: 10px;
+  color: var(--amarillo);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hud-coin { font-size: 16px; animation: spin 3s linear infinite; }
+.hud-lives { display: flex; gap: 4px; }
+.hud-life { font-size: 16px; }
+
+/* ── PANTALLA INTRO ── */
+.intro-card {
+  border-radius: 24px;
+  overflow: hidden;
+  border: 3px solid var(--verde);
+  box-shadow: 0 0 0 6px rgba(0,201,139,0.15), 0 20px 60px rgba(0,0,0,0.5);
+  background: var(--fondo2);
+}
+
+.intro-hero {
+  position: relative;
+  text-align: center;
+  overflow: hidden;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 2rem 2rem;
+}
+.intro-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.intro-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(13,27,42,0.1) 0%, rgba(13,27,42,0.85) 60%, rgba(13,27,42,0.97) 100%);
+}
+.intro-hero-content { position: relative; z-index: 1; }
+
+.game-title {
+  font-family: var(--pixel);
+  font-size: 20px;
+  color: var(--amarillo);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  text-shadow: 3px 3px 0px var(--amarillo-oscuro), 0 0 30px rgba(255,214,0,0.5);
+  letter-spacing: 2px;
+}
+.game-subtitle {
+  font-family: var(--round);
+  font-size: 14px;
+  color: var(--verde-claro);
+  font-weight: 700;
+}
+
+.intro-body { padding: 1.5rem; }
+
+/* Indicadores de nivel */
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,214,0,0.1);
+  border: 2px solid var(--amarillo);
+  border-radius: 50px;
+  padding: 4px 14px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: var(--amarillo);
+  margin-bottom: 1rem;
+  animation: glow 2s ease-in-out infinite;
+}
+
+.story-card {
+  background: rgba(0,201,139,0.08);
+  border-radius: var(--radio);
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1.2rem;
+  border: 2px solid rgba(0,201,139,0.3);
+  position: relative;
+  overflow: hidden;
+}
+.story-card::before {
+  content: '🗺️';
+  position: absolute;
+  right: -8px; top: -8px;
+  font-size: 52px;
+  opacity: 0.1;
+}
+.story-card .label {
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: var(--verde);
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+}
+.story-card p {
+  font-size: 13px;
+  color: #cee8df;
+  line-height: 1.7;
+  font-family: var(--round);
+  font-weight: 700;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.rule-item {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rule-item:hover { border-color: var(--verde); background: rgba(0,201,139,0.08); }
+.rule-icon { font-size: 22px; flex-shrink: 0; animation: float 3s ease-in-out infinite; }
+.rule-item:nth-child(2) .rule-icon { animation-delay: 0.5s; }
+.rule-item:nth-child(3) .rule-icon { animation-delay: 1s; }
+.rule-item:nth-child(4) .rule-icon { animation-delay: 1.5s; }
+.rule-text { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.4; font-family: var(--body); }
+.rule-text strong { color: #fff; display: block; margin-bottom: 2px; font-family: var(--round); font-size: 13px; }
+
+.btn-start {
+  width: 100%;
+  padding: 18px;
+  background: var(--amarillo);
+  color: #1a1100;
+  border: none;
+  border-radius: var(--radio);
+  font-family: var(--pixel);
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  letter-spacing: 1px;
+  box-shadow: 0 6px 0 var(--amarillo-oscuro);
+  position: relative;
+  animation: bounce 2s ease-in-out infinite;
+}
+.btn-start:hover { transform: translateY(3px); box-shadow: 0 3px 0 var(--amarillo-oscuro); }
+.btn-start:active { transform: translateY(6px); box-shadow: 0 0 0 var(--amarillo-oscuro); }
+
+/* ── PANTALLA MAPA ── */
+.mapa-header {
+  background: var(--fondo2);
+  border-radius: 20px;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1rem;
+  border: 2px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.mapa-header h2 {
+  font-family: var(--pixel);
+  font-size: 11px;
+  color: var(--amarillo);
+  line-height: 1.6;
+}
+.mapa-header p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; font-family: var(--body); }
+
+.prog-wrap { flex: 1; max-width: 180px; }
+.prog-bar-bg {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  height: 10px;
+  overflow: hidden;
+  margin-bottom: 4px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.prog-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--verde), #00ffaa);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+  position: relative;
+}
+.prog-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 8px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 4px;
+}
+.prog-text { font-family: var(--pixel); font-size: 7px; color: rgba(255,255,255,0.5); text-align: right; }
+
+.paradas-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 1rem; }
+
+.parada-card {
+  background: var(--fondo2);
+  border-radius: 20px;
+  padding: 1.2rem 1.4rem;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 2px solid rgba(255,255,255,0.08);
+  position: relative;
+  overflow: hidden;
+}
+.parada-card::after {
+  content: '▶';
+  position: absolute;
+  right: 1.4rem;
+  font-size: 14px;
+  color: rgba(255,255,255,0.3);
+  transition: color 0.2s, transform 0.2s;
+}
+.parada-card:hover { transform: translateX(6px); border-color: rgba(255,255,255,0.3); }
+.parada-card:hover::after { color: var(--amarillo); transform: translateX(4px); }
+.parada-card:active { transform: scale(0.98); }
+.parada-card.done { border-color: var(--verde); opacity: 0.6; cursor: default; pointer-events: none; }
+.parada-card.done::after { content: '✓'; color: var(--verde); }
+
+.parada-card.musical { border-left: 4px solid var(--amarillo); }
+.parada-card.literario { border-left: 4px solid var(--morado); }
+.parada-card.inmaterial { border-left: 4px solid var(--verde); }
+
+.parada-icon-wrap {
+  width: 64px; height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  flex-shrink: 0;
+  position: relative;
+}
+.parada-icon-wrap.musical { background: rgba(255,214,0,0.12); border: 2px solid rgba(255,214,0,0.3); }
+.parada-icon-wrap.literario { background: rgba(124,111,205,0.12); border: 2px solid rgba(124,111,205,0.3); }
+.parada-icon-wrap.inmaterial { background: rgba(0,201,139,0.12); border: 2px solid rgba(0,201,139,0.3); }
+
+.parada-info { flex: 1; padding-right: 1.5rem; }
+.parada-region {
+  font-family: var(--pixel);
+  font-size: 7px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 5px;
+  letter-spacing: 0.06em;
+}
+.parada-nombre {
+  font-family: var(--round);
+  font-size: 17px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 3px;
+}
+.parada-cat { font-size: 12px; color: rgba(255,255,255,0.5); font-family: var(--body); }
+
+.parada-estado {
+  position: absolute;
+  top: 12px; right: 40px;
+  font-family: var(--pixel);
+  font-size: 7px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+.parada-estado.pendiente { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); }
+.parada-estado.done { background: var(--verde); color: #004d36; }
+
+/* Estrellitas de puntos disponibles */
+.parada-stars { display: flex; gap: 3px; margin-top: 4px; }
+.parada-star { font-size: 10px; opacity: 0.3; }
+.parada-star.active { opacity: 1; }
+
+/* ── PANTALLA RETO ── */
+.reto-card {
+  background: var(--fondo2);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.08);
+}
+
+.reto-header-band { padding: 1.2rem 1.4rem 1rem; position: relative; overflow: hidden; }
+.reto-header-band.musical { background: rgba(255,214,0,0.06); border-bottom: 2px solid rgba(255,214,0,0.2); }
+.reto-header-band.literario { background: rgba(124,111,205,0.06); border-bottom: 2px solid rgba(124,111,205,0.2); }
+.reto-header-band.inmaterial { background: rgba(0,201,139,0.06); border-bottom: 2px solid rgba(0,201,139,0.2); }
+
+.reto-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  margin-bottom: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: color 0.2s;
+}
+.reto-back:hover { color: #fff; }
+
+.reto-cat-pill {
+  display: inline-block;
+  font-family: var(--pixel);
+  font-size: 7px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+.reto-cat-pill.musical { background: var(--amarillo); color: #3a2a00; }
+.reto-cat-pill.literario { background: var(--morado); color: #fff; }
+.reto-cat-pill.inmaterial { background: var(--verde); color: #003d28; }
+
+.reto-titulo {
+  font-family: var(--round);
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.reto-desc { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.5; }
+
+.reto-body { padding: 1.4rem; }
+
+/* Contador de pregunta tipo arcade */
+.pregunta-num-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.pregunta-num {
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.07em;
+}
+.pregunta-pts {
+  font-family: var(--pixel);
+  font-size: 8px;
+  color: var(--amarillo);
+}
+
+.pregunta-q {
+  font-family: var(--round);
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 1.2rem;
+  line-height: 1.5;
+  padding: 1rem 1.2rem;
+  background: rgba(255,255,255,0.04);
+  border-radius: 14px;
+  border-left: 4px solid var(--azul);
+}
+
+.opciones-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.opcion-btn {
+  padding: 14px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  font-family: var(--round);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  line-height: 1.4;
+  position: relative;
+}
+.opcion-letra {
+  display: inline-block;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  font-family: var(--pixel);
+  font-size: 8px;
+  line-height: 22px;
+  text-align: center;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+.opcion-btn:hover:not(:disabled) {
+  border-color: var(--azul);
+  background: rgba(61,155,233,0.12);
+  transform: translateY(-2px);
+}
+.opcion-btn:disabled { cursor: default; }
+.opcion-btn.correct {
+  border-color: var(--verde) !important;
+  background: rgba(0,201,139,0.15) !important;
+  color: #00ffaa !important;
+  animation: pop 0.3s ease;
+}
+.opcion-btn.correct .opcion-letra { background: var(--verde); color: #003d28; }
+.opcion-btn.wrong {
+  border-color: var(--naranja) !important;
+  background: rgba(255,87,51,0.12) !important;
+  color: #ff8866 !important;
+  animation: shake 0.4s ease;
+}
+.opcion-btn.wrong .opcion-letra { background: var(--naranja); color: #fff; }
+
+.feedback-card {
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  animation: slideIn 0.25s ease;
+  font-family: var(--body);
+}
+.feedback-card.ok {
+  background: rgba(0,201,139,0.1);
+  color: #a0ffd8;
+  border: 1.5px solid rgba(0,201,139,0.3);
+}
+.feedback-card.fail {
+  background: rgba(255,87,51,0.1);
+  color: #ffb8a5;
+  border: 1.5px solid rgba(255,87,51,0.3);
+}
+.fb-label {
+  font-family: var(--pixel);
+  font-size: 8px;
+  margin-bottom: 6px;
+  display: block;
+  letter-spacing: 0.05em;
+}
+.fb-label.ok { color: var(--verde); }
+.fb-label.fail { color: var(--naranja); }
+
+.btn-siguiente {
+  width: 100%;
+  padding: 16px;
+  background: var(--verde);
+  color: #003d28;
+  border: none;
+  border-radius: var(--radio);
+  font-family: var(--pixel);
+  font-size: 10px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  display: none;
+  box-shadow: 0 5px 0 var(--verde-oscuro);
+  letter-spacing: 1px;
+}
+.btn-siguiente:hover { transform: translateY(2px); box-shadow: 0 3px 0 var(--verde-oscuro); }
+.btn-siguiente:active { transform: translateY(5px); box-shadow: 0 0 0 var(--verde-oscuro); }
+
+/* ── PANTALLA FINAL ── */
+.final-card {
+  background: var(--fondo2);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 3px solid var(--amarillo);
+  box-shadow: 0 0 0 6px rgba(255,214,0,0.1), 0 20px 60px rgba(0,0,0,0.5);
+  animation: glow 2s ease-in-out infinite;
+}
+
+.final-hero {
+  background: linear-gradient(135deg, #1a0e00, #0d1b0a);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.final-trophy { font-size: 72px; display: block; margin-bottom: 8px; animation: bounce 1s ease-in-out infinite; }
+.final-hero h2 {
+  font-family: var(--pixel);
+  font-size: 14px;
+  color: var(--amarillo);
+  margin-bottom: 8px;
+  line-height: 1.6;
+  text-shadow: 2px 2px 0 var(--amarillo-oscuro);
+}
+.final-hero p { font-size: 13px; color: rgba(255,255,255,0.6); font-family: var(--body); }
+
+.puntaje-ring {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  border: 4px solid var(--amarillo);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem auto 0;
+  background: rgba(255,214,0,0.05);
+  animation: glow 2s ease-in-out infinite;
+}
+.puntaje-num { font-family: var(--pixel); font-size: 24px; font-weight: 700; color: var(--amarillo); }
+.puntaje-label { font-family: var(--pixel); font-size: 7px; color: rgba(255,214,0,0.6); margin-top: 4px; }
+
+.final-body { padding: 1.5rem; }
+
+.logros-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+.logro-item {
+  background: rgba(255,255,255,0.04);
+  border: 2px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px 8px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+.logro-item:hover { border-color: var(--amarillo); }
+.logro-icon { font-size: 28px; display: block; margin-bottom: 8px; animation: float 3s ease-in-out infinite; }
+.logro-item:nth-child(2) .logro-icon { animation-delay: 0.6s; }
+.logro-item:nth-child(3) .logro-icon { animation-delay: 1.2s; }
+.logro-label { font-family: var(--pixel); font-size: 6px; color: rgba(255,255,255,0.6); line-height: 1.6; }
+
+.reflexion-box {
+  background: rgba(0,201,139,0.07);
+  border-radius: var(--radio);
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1.5rem;
+  border: 1.5px solid rgba(0,201,139,0.2);
+}
+.reflexion-box .label { font-family: var(--pixel); font-size: 7px; color: var(--verde); margin-bottom: 8px; display: block; }
+.reflexion-box p { font-size: 13px; color: #aae8d5; line-height: 1.7; font-family: var(--body); }
+
+.btn-reiniciar {
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  color: var(--amarillo);
+  border: 2px solid var(--amarillo);
+  border-radius: var(--radio);
+  font-family: var(--pixel);
+  font-size: 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+  letter-spacing: 1px;
+}
+.btn-reiniciar:hover { background: var(--amarillo); color: #1a1100; transform: scale(1.02); }
+
+.pie { text-align: center; padding: 1.5rem 0 0; font-family: var(--pixel); font-size: 7px; color: rgba(255,255,255,0.2); line-height: 1.8; }
+
+/* Confeti animado */
+.confetti-piece {
+  position: fixed;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confettiFall 1.5s ease-in forwards;
+}
+
+/* Popup de puntos flotantes */
+.pts-popup {
+  position: fixed;
+  font-family: var(--pixel);
+  font-size: 14px;
+  color: var(--amarillo);
+  pointer-events: none;
+  z-index: 9998;
+  text-shadow: 2px 2px 0 var(--amarillo-oscuro);
+  animation: starFloat 1.2s ease-out forwards;
+}
+
+@media (max-width: 500px) {
+  .opciones-grid { grid-template-columns: 1fr; }
+  .rules-grid { grid-template-columns: 1fr; }
+  .game-title { font-size: 14px; }
+  body { padding: 1rem 0.75rem 3rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="stars-bg" id="stars-bg"></div>
+
+<div class="game-container">
+
+<!-- HUD -->
+<div class="hud" id="hud" style="display:none">
+  <div class="hud-score">
+    <span class="hud-coin">🪙</span>
+    <span id="hud-pts">0</span> PTS
+  </div>
+  <div class="hud-lives">
+    <span class="hud-life">❤️</span>
+    <span class="hud-life">❤️</span>
+    <span class="hud-life">❤️</span>
+  </div>
+</div>
+
+<!-- INTRO -->
+<div id="s-intro" class="screen active">
+  <div class="intro-card">
+    <div class="intro-hero">
+      <img class="intro-hero-img" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2ODAgMzAwIiB3aWR0aD0iNjgwIiBoZWlnaHQ9IjMwMCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMEQxQjJBIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzEzMjIzMyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iY29sRmxhZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjAiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjRkZENjAwIiBzdG9wLW9wYWNpdHk9IjAuMTgiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSI1MCUiIHN0b3AtY29sb3I9IiMwMDMyQTAiIHN0b3Atb3BhY2l0eT0iMC4xMiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNDRTExMjYiIHN0b3Atb3BhY2l0eT0iMC4xOCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZ2xvdzEiIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwMEM5OEIiIHN0b3Atb3BhY2l0eT0iMC4zNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwMEM5OEIiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZ2xvdzIiIGN4PSI1MCUiIGN5PSI1MCUiIHI9IjUwJSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNGRkQ2MDAiIHN0b3Atb3BhY2l0eT0iMC4yNSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNGRkQ2MDAiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxmaWx0ZXIgaWQ9ImJsdXIyIj4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMiIvPgogICAgPC9maWx0ZXI+CiAgICA8ZmlsdGVyIGlkPSJibHVyNSI+CiAgICAgIDxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjUiLz4KICAgIDwvZmlsdGVyPgogIDwvZGVmcz4KCiAgPCEtLSBCYWNrZ3JvdW5kIC0tPgogIDxyZWN0IHdpZHRoPSI2ODAiIGhlaWdodD0iMzAwIiBmaWxsPSJ1cmwoI3NreSkiLz4KICA8cmVjdCB3aWR0aD0iNjgwIiBoZWlnaHQ9IjMwMCIgZmlsbD0idXJsKCNjb2xGbGFnKSIvPgoKICA8IS0tIEdsb3dzIC0tPgogIDxlbGxpcHNlIGN4PSIxNjAiIGN5PSIxNTAiIHJ4PSIyMDAiIHJ5PSIxNTAiIGZpbGw9InVybCgjZ2xvdzEpIiBvcGFjaXR5PSIwLjYiLz4KICA8ZWxsaXBzZSBjeD0iNTIwIiBjeT0iMTIwIiByeD0iMTYwIiByeT0iMTIwIiBmaWxsPSJ1cmwoI2dsb3cyKSIgb3BhY2l0eT0iMC41Ii8+CgogIDwhLS0gU3RhcnMgc2NhdHRlcmVkIC0tPgogIDxnIG9wYWNpdHk9IjAuNSI+CiAgICA8Y2lyY2xlIGN4PSI2MCIgY3k9IjMwIiByPSIxLjUiIGZpbGw9IndoaXRlIi8+CiAgICA8Y2lyY2xlIGN4PSIxMjAiIGN5PSIxOCIgcj0iMSIgZmlsbD0id2hpdGUiLz4KICAgIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjQwIiByPSIyIiBmaWxsPSJ3aGl0ZSIvPgogICAgPGNpcmNsZSBjeD0iMzEwIiBjeT0iMTUiIHI9IjEuNSIgZmlsbD0id2hpdGUiLz4KICAgIDxjaXJjbGUgY3g9IjQyMCIgY3k9IjMwIiByPSIxIiBmaWxsPSJ3aGl0ZSIvPgogICAgPGNpcmNsZSBjeD0iNTUwIiBjeT0iMjIiIHI9IjIiIGZpbGw9IndoaXRlIi8+CiAgICA8Y2lyY2xlIGN4PSI2NDAiIGN5PSI0NSIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIvPgogICAgPGNpcmNsZSBjeD0iODAiIGN5PSI3MCIgcj0iMSIgZmlsbD0id2hpdGUiLz4KICAgIDxjaXJjbGUgY3g9IjQ3MCIgY3k9IjU1IiByPSIxLjUiIGZpbGw9IndoaXRlIi8+CiAgICA8Y2lyY2xlIGN4PSI2MDAiIGN5PSI2OCIgcj0iMSIgZmlsbD0id2hpdGUiLz4KICA8L2c+CgogIDwhLS0gQ29sb21iaWFuIGZsYWcgYmFuZCB0b3AgLS0+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjY4MCIgaGVpZ2h0PSI4IiBmaWxsPSIjRkZENjAwIiBvcGFjaXR5PSIwLjciLz4KICA8cmVjdCB4PSIwIiB5PSI4IiB3aWR0aD0iNjgwIiBoZWlnaHQ9IjQiIGZpbGw9IiMwMDMyQTAiIG9wYWNpdHk9IjAuNSIvPgogIDxyZWN0IHg9IjAiIHk9IjEyIiB3aWR0aD0iNjgwIiBoZWlnaHQ9IjQiIGZpbGw9IiNDRTExMjYiIG9wYWNpdHk9IjAuNSIvPgoKICA8IS0tIE1vdW50YWlucyBzaWxob3VldHRlIChBbmRlcykgLS0+CiAgPGcgb3BhY2l0eT0iMC4yNSI+CiAgICA8cG9seWdvbiBwb2ludHM9IjAsMjgwIDgwLDE2MCAxNjAsMjAwIDI0MCwxMzAgMzIwLDE3MCA0MDAsMTEwIDQ4MCwxNTUgNTYwLDEyMCA2NDAsMTYwIDY4MCwxNDAgNjgwLDMwMCAwLDMwMCIgZmlsbD0iIzAwQzk4QiIvPgogICAgPHBvbHlnb24gcG9pbnRzPSIwLDMwMCA2MCwyMDAgMTQwLDIzMCAyMjAsMTcwIDMwMCwyMDAgMzgwLDE0NSA0NjAsMTg1IDU0MCwxNTUgNjIwLDE5MCA2ODAsMTc1IDY4MCwzMDAiIGZpbGw9IiMwMDdBNTQiLz4KICA8L2c+CgogIDwhLS0gRGVjb3JhdGl2ZSBjaXJjbGVzIC8gY3VsdHVyYWwgc3ltYm9scyAtLT4KICA8IS0tIFZhbGxlbmF0byBhY2NvcmRpb24gaGludCAtIGxlZnQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNzAsIDEyMCkiIG9wYWNpdHk9IjAuOCI+CiAgICA8cmVjdCB4PSItMTgiIHk9Ii0zMCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjU4IiByeD0iNiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZENjAwIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxsaW5lIHgxPSItMTgiIHkxPSItMTAiIHgyPSIxOCIgeTI9Ii0xMCIgc3Ryb2tlPSIjRkZENjAwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC43Ii8+CiAgICA8bGluZSB4MT0iLTE4IiB5MT0iOCIgeDI9IjE4IiB5Mj0iOCIgc3Ryb2tlPSIjRkZENjAwIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC43Ii8+CiAgICA8bGluZSB4MT0iLTE4IiB5MT0iMjYiIHgyPSIxOCIgeTI9IjI2IiBzdHJva2U9IiNGRkQ2MDAiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjciLz4KICAgIDx0ZXh0IHg9IjAiIHk9Ii0zOCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI0ZGRDYwMCIgZm9udC1zaXplPSI5IiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBvcGFjaXR5PSIwLjgiPvCfjrU8L3RleHQ+CiAgPC9nPgoKICA8IS0tIENvbG9tYmlhIG1hcCBvdXRsaW5lIChzaW1wbGlmaWVkKSAtLT4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDAsIDUwKSIgb3BhY2l0eT0iMC40Ij4KICAgIDxwYXRoIGQ9Ik0wLDAgQzEwLC01IDMwLC04IDQ1LDAgQzYwLDggNjUsMjUgNjAsNDUgQzU1LDY1IDQwLDgwIDM1LDEwMCBDMzAsMTIwIDM1LDEzNSAzMCwxNTAgQzIwLDE2NSA1LDE1NSAtNSwxNDAgQy0xNSwxMjUgLTIwLDEwMCAtMTgsNzUgQy0xNiw1MCAtMTAsMjAgMCwwIFoiIAogICAgICAgICAgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBDOThCIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDwhLS0gQXRsYW50aWMgY29hc3QgYnVtcCAtLT4KICAgIDxwYXRoIGQ9Ik00NSwwIEM1NSwtMTAgNzAsLTUgNzUsMTAgQzc4LDI1IDY1LDM1IDYwLDQ1IiAKICAgICAgICAgIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwQzk4QiIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8L2c+CgogIDwhLS0gTWFyaW1iYSAvIG11c2ljIG5vdGVzIHJpZ2h0IC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU4MCwgMTAwKSIgb3BhY2l0eT0iMC43NSI+CiAgICA8cmVjdCB4PSItMzAiIHk9IjAiIHdpZHRoPSI4IiBoZWlnaHQ9IjQ1IiByeD0iMyIgZmlsbD0iIzdDNkZDRCIvPgogICAgPHJlY3QgeD0iLTE4IiB5PSI4IiB3aWR0aD0iOCIgaGVpZ2h0PSIzOCIgcng9IjMiIGZpbGw9IiM3QzZGQ0QiLz4KICAgIDxyZWN0IHg9Ii02IiB5PSI1IiB3aWR0aD0iOCIgaGVpZ2h0PSI0MiIgcng9IjMiIGZpbGw9IiM3QzZGQ0QiLz4KICAgIDxyZWN0IHg9IjYiIHk9IjEyIiB3aWR0aD0iOCIgaGVpZ2h0PSIzMiIgcng9IjMiIGZpbGw9IiM3QzZGQ0QiLz4KICAgIDxyZWN0IHg9IjE4IiB5PSI0IiB3aWR0aD0iOCIgaGVpZ2h0PSI0NiIgcng9IjMiIGZpbGw9IiM3QzZGQ0QiLz4KICAgIDxsaW5lIHgxPSItMzAiIHkxPSItNSIgeDI9IjI2IiB5Mj0iLTUiIHN0cm9rZT0iIzdDNkZDRCIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDx0ZXh0IHg9Ii0yIiB5PSItMTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM3QzZGQ0QiIGZvbnQtc2l6ZT0iOSIgZm9udC1mYW1pbHk9Im1vbm9zcGFjZSI+8J+OtjwvdGV4dD4KICA8L2c+CgogIDwhLS0gQ3VtYmlhIGZpZ3VyZSBzaWxob3VldHRlIGNlbnRlci1sZWZ0IC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDIwMCwgODApIiBvcGFjaXR5PSIwLjU1Ij4KICAgIDwhLS0gSGVhZCAtLT4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIxMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDwhLS0gQm9keS9kcmVzcyAtLT4KICAgIDxwYXRoIGQ9Ik0tOCwxMiBDLTI1LDQwIC0zNSw4MCAtMjAsOTAgTDIwLDkwIEMzNSw4MCAyNSw0MCA4LDEyIFoiIAogICAgICAgICAgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDwhLS0gQXJtcyByYWlzZWQgLS0+CiAgICA8cGF0aCBkPSJNLTgsMjUgUS0zNSwxNSAtNDAsNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDxwYXRoIGQ9Ik04LDI1IFEzNSwxNSA0MCw1IiBmaWxsPSJub25lIiBzdHJva2U9IiNGRjZGQUUiIHN0cm9rZS13aWR0aD0iMiIvPgogICAgPCEtLSBTa2lydCBydWZmbGVzIC0tPgogICAgPHBhdGggZD0iTS0yMCw3MCBRLTMwLDg1IC0xOCw5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPHBhdGggZD0iTTAsNzUgUTAsOTIgMiw5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPHBhdGggZD0iTTIwLDcwIFEzMCw4NSAxOCw5MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDwvZz4KCiAgPCEtLSBGbG9yYWwgLyB0cm9waWNhbCBtb3RpZiB0b3AgcmlnaHQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjE1LCA1NSkiIG9wYWNpdHk9IjAuNSI+CiAgICA8cGF0aCBkPSJNMCwtMjAgUTgsLTEwIDAsMCBRLTgsLTEwIDAsLTIwIFoiIGZpbGw9IiMwMEM5OEIiLz4KICAgIDxwYXRoIGQ9Ik0yMCwwIFExMCw4IDAsMCBRMTAsLTggMjAsMCBaIiBmaWxsPSIjMDBDOThCIi8+CiAgICA8cGF0aCBkPSJNMCwyMCBRLTgsMTAgMCwwIFE4LDEwIDAsMjAgWiIgZmlsbD0iIzAwQzk4QiIvPgogICAgPHBhdGggZD0iTS0yMCwwIFEtMTAsLTggMCwwIFEtMTAsOCAtMjAsMCBaIiBmaWxsPSIjMDBDOThCIi8+CiAgICA8Y2lyY2xlIGN4PSIwIiBjeT0iMCIgcj0iNSIgZmlsbD0iI0ZGRDYwMCIvPgogIDwvZz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg2NDAsIDgwKSIgb3BhY2l0eT0iMC4zNSI+CiAgICA8cGF0aCBkPSJNMCwtMTUgUTYsLTcgMCwwIFEtNiwtNyAwLC0xNSBaIiBmaWxsPSIjRkZENjAwIi8+CiAgICA8cGF0aCBkPSJNMTUsMCBRNyw2IDAsMCBRNywtNiAxNSwwIFoiIGZpbGw9IiNGRkQ2MDAiLz4KICAgIDxwYXRoIGQ9Ik0wLDE1IFEtNiw3IDAsMCBRNiw3IDAsMTUgWiIgZmlsbD0iI0ZGRDYwMCIvPgogICAgPHBhdGggZD0iTS0xNSwwIFEtNywtNiAwLDAgUS03LDYgLTE1LDAgWiIgZmlsbD0iI0ZGRDYwMCIvPgogICAgPGNpcmNsZSBjeD0iMCIgY3k9IjAiIHI9IjQiIGZpbGw9IiNGRjU3MzMiLz4KICA8L2c+CgogIDwhLS0gT3JjaGlkIChuYXRpb25hbCBmbG93ZXIpIGxlZnQgLS0+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTEwLCA3MCkiIG9wYWNpdHk9IjAuNSI+CiAgICA8ZWxsaXBzZSBjeD0iMCIgY3k9Ii0xOCIgcng9IjgiIHJ5PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjEuNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIwKSIvPgogICAgPGVsbGlwc2UgY3g9IjE2IiBjeT0iLTgiIHJ4PSI4IiByeT0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGNkZBRSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHRyYW5zZm9ybT0icm90YXRlKDYwKSIvPgogICAgPGVsbGlwc2UgY3g9IjE2IiBjeT0iOCIgcng9IjgiIHJ5PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjEuNSIgdHJhbnNmb3JtPSJyb3RhdGUoMTIwKSIvPgogICAgPGVsbGlwc2UgY3g9IjAiIGN5PSIxOCIgcng9IjgiIHJ5PSIxNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkY2RkFFIiBzdHJva2Utd2lkdGg9IjEuNSIgdHJhbnNmb3JtPSJyb3RhdGUoLTE2MCkiLz4KICAgIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSI2IiBmaWxsPSIjRkZENjAwIiBvcGFjaXR5PSIwLjciLz4KICA8L2c+CgogIDwhLS0gQm90dG9tIGRlY29yYXRpdmUgYmFuZCAtLT4KICA8cmVjdCB4PSIwIiB5PSIyODYiIHdpZHRoPSI2ODAiIGhlaWdodD0iMiIgZmlsbD0iIzAwQzk4QiIgb3BhY2l0eT0iMC40Ii8+CiAgPHJlY3QgeD0iMCIgeT0iMjkwIiB3aWR0aD0iNjgwIiBoZWlnaHQ9IjEwIiBmaWxsPSJ1cmwoI3NreSkiLz4KCiAgPCEtLSBTdWJ0bGUgc2NhbmxpbmUgb3ZlcmxheSAtLT4KICA8cmVjdCB3aWR0aD0iNjgwIiBoZWlnaHQ9IjMwMCIgZmlsbD0ibm9uZSIgCiAgICAgICAgc3R5bGU9ImJhY2tncm91bmQ6IHJlcGVhdGluZy1saW5lYXItZ3JhZGllbnQoMGRlZywgdHJhbnNwYXJlbnQsIHRyYW5zcGFyZW50IDJweCwgcmdiYSgwLDAsMCwwLjAzKSAycHgsIHJnYmEoMCwwLDAsMC4wMykgNHB4KSIgb3BhY2l0eT0iMC4zIi8+Cjwvc3ZnPg==" alt="Mapa de Colombia con fauna y flora">
+      <div class="intro-hero-overlay"></div>
+      <div class="intro-hero-content">
+        <div class="game-title">COLOMBIA<br>EN JUEGO</div>
+        <div class="game-subtitle">🎮 Folclor Interactivo 🎮</div>
+      </div>
+    </div>
+    <div class="intro-body">
+      <div class="level-badge">⭐ NIVEL 1 — EXPLORADOR CULTURAL ⭐</div>
+      <div class="story-card">
+        <div class="label">📜 TU MISIÓN</div>
+        <p>Eres un explorador que recorre Colombia. Recupera los saberes olvidados de cada región: ritmos, leyendas y tradiciones. Supera los 6 retos y gana el título de <strong>Guardián del Folclor</strong>.</p>
+      </div>
+      <div class="rules-grid">
+        <div class="rule-item">
+          <div class="rule-icon">🗺️</div>
+          <div class="rule-text"><strong>3 paradas</strong>Visita cada región del mapa cultural.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">❓</div>
+          <div class="rule-text"><strong>2 retos cada una</strong>Responde bien y gana puntos.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">🪙</div>
+          <div class="rule-text"><strong>+10 pts por acierto</strong>¡Intenta obtener el máximo!</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-icon">🏆</div>
+          <div class="rule-text"><strong>Insignia final</strong>Completa todo y conviértete en Guardián.</div>
+        </div>
+      </div>
+      <button class="btn-start" onclick="comenzar()">▶ INICIAR MISIÓN ◀</button>
+    </div>
+  </div>
+  <div class="pie">ACTIVIDAD COLABORATIVA · DISEÑO DE JUEGO INTERACTIVO<br>FOLCLOR COLOMBIANO</div>
+</div>
+
+<!-- MAPA -->
+<div id="s-mapa" class="screen">
+  <div class="mapa-header">
+    <div>
+      <h2>🗺️ MAPA CULTURAL</h2>
+      <p>Elige tu próxima parada</p>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-text" id="prog-text">0 / 3 PARADAS</div>
+    </div>
+  </div>
+  <div class="paradas-grid">
+    <div class="parada-card musical" id="card-musical" onclick="iniciarReto('musical')">
+      <div class="parada-icon-wrap musical">🎵</div>
+      <div class="parada-info">
+        <div class="parada-region">COSTA CARIBE</div>
+        <div class="parada-nombre">Los Ritmos de Colombia</div>
+        <div class="parada-cat">Folclor musical</div>
+        <div class="parada-stars">
+          <span class="parada-star active" id="star-musical-0">⭐</span>
+          <span class="parada-star active" id="star-musical-1">⭐</span>
+          <span class="parada-star" id="star-musical-2">⭐</span>
+        </div>
+      </div>
+      <div class="parada-estado pendiente" id="estado-musical">JUGAR</div>
+    </div>
+    <div class="parada-card literario" id="card-literario" onclick="iniciarReto('literario')">
+      <div class="parada-icon-wrap literario">📖</div>
+      <div class="parada-info">
+        <div class="parada-region">REGIÓN ANDINA</div>
+        <div class="parada-nombre">Palabras que Enseñan</div>
+        <div class="parada-cat">Folclor literario</div>
+        <div class="parada-stars">
+          <span class="parada-star active" id="star-literario-0">⭐</span>
+          <span class="parada-star active" id="star-literario-1">⭐</span>
+          <span class="parada-star" id="star-literario-2">⭐</span>
+        </div>
+      </div>
+      <div class="parada-estado pendiente" id="estado-literario">JUGAR</div>
+    </div>
+    <div class="parada-card inmaterial" id="card-inmaterial" onclick="iniciarReto('inmaterial')">
+      <div class="parada-icon-wrap inmaterial">🌿</div>
+      <div class="parada-info">
+        <div class="parada-region">REGIÓN PACÍFICO</div>
+        <div class="parada-nombre">Tradiciones Vivas</div>
+        <div class="parada-cat">Folclor inmaterial</div>
+        <div class="parada-stars">
+          <span class="parada-star active" id="star-inmaterial-0">⭐</span>
+          <span class="parada-star active" id="star-inmaterial-1">⭐</span>
+          <span class="parada-star" id="star-inmaterial-2">⭐</span>
+        </div>
+      </div>
+      <div class="parada-estado pendiente" id="estado-inmaterial">JUGAR</div>
+    </div>
+  </div>
+</div>
+
+<!-- RETO -->
+<div id="s-reto" class="screen">
+  <div class="reto-card">
+    <div class="reto-header-band" id="reto-band">
+      <button class="reto-back" onclick="goScreen('s-mapa')">◀ VOLVER AL MAPA</button>
+      <div class="reto-cat-pill" id="reto-pill"></div>
+      <h2 class="reto-titulo" id="reto-titulo"></h2>
+      <p class="reto-desc" id="reto-desc"></p>
+    </div>
+    <div class="reto-body">
+      <div class="pregunta-num-wrap">
+        <div class="pregunta-num" id="preg-num"></div>
+        <div class="pregunta-pts">🪙 +10 PTS</div>
+      </div>
+      <div class="pregunta-q" id="preg-q"></div>
+      <div class="opciones-grid" id="opciones-wrap"></div>
+      <div id="feedback-wrap"></div>
+      <button class="btn-siguiente" id="btn-sig" onclick="siguienteAccion()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="s-final" class="screen">
+  <div class="final-card">
+    <div class="final-hero">
+      <span class="final-trophy">🏆</span>
+      <h2>¡GUARDIÁN<br>DEL FOLCLOR!</h2>
+      <p>Completaste las 3 paradas y rescataste el saber cultural colombiano</p>
+      <div class="puntaje-ring">
+        <span class="puntaje-num" id="score-final">0</span>
+        <span class="puntaje-label">PUNTOS</span>
+      </div>
+    </div>
+    <div class="final-body">
+      <div class="logros-grid">
+        <div class="logro-item">
+          <span class="logro-icon">🎵</span>
+          <div class="logro-label">MAESTRO<br>DEL RITMO</div>
+        </div>
+        <div class="logro-item">
+          <span class="logro-icon">📖</span>
+          <div class="logro-label">GUARDIÁN<br>DE LEYENDAS</div>
+        </div>
+        <div class="logro-item">
+          <span class="logro-icon">🌿</span>
+          <div class="logro-label">CONOCEDOR<br>DE TRADICIONES</div>
+        </div>
+      </div>
+      <div class="reflexion-box">
+        <span class="label">💬 REFLEXIÓN FINAL</span>
+        <p>El folclor colombiano no es solo del pasado — vive en cada región, en cada familia, en cada celebración. Conocerlo es una forma de preservarlo y transmitirlo a las nuevas generaciones.</p>
+      </div>
+      <button class="btn-reiniciar" onclick="reiniciar()">↺ JUGAR DE NUEVO</button>
+    </div>
+  </div>
+  <div class="pie">COLOMBIA EN JUEGO · ACTIVIDAD COLABORATIVA · FOLCLOR COLOMBIANO</div>
+</div>
+
+</div>
+
+<script>
+const RETOS = {
+  musical: {
+    tipo:'musical', region:'COSTA CARIBE', titulo:'Los Ritmos de Colombia',
+    desc:'La Costa Caribe es cuna de ritmos que recorren el mundo. ¿Cuánto sabes sobre sus sonidos y tradiciones musicales?',
+    cat:'Folclor musical',
+    preguntas:[
+      { q:'¿Cuál es el ritmo folclórico más representativo de la Costa Caribe colombiana, declarado Patrimonio Cultural de la Humanidad por la UNESCO?',
+        opciones:['Bambuco','Cumbia','Vallenato','Mapalé'], correcta:2,
+        ok:'¡Correcto! El vallenato fue declarado Patrimonio Cultural Inmaterial de la Humanidad por la UNESCO en 2015. Combina acordeón, caja y guacharaca.',
+        fail:'Era el vallenato. Declarado Patrimonio de la UNESCO en 2015, es el ritmo símbolo de la identidad caribeña colombiana.' },
+      { q:'¿Cuál de estos instrumentos es característico del folclor musical del Pacífico colombiano?',
+        opciones:['Acordeón','Tiple','Marimba de chonta','Bandola'], correcta:2,
+        ok:'¡Muy bien! La marimba de chonta es el corazón de la música del Pacífico, también reconocida por la UNESCO como patrimonio cultural inmaterial.',
+        fail:'Es la marimba de chonta. Instrumento sagrado de las comunidades afrocolombianas del Pacífico y patrimonio de la UNESCO.' }
+    ]
+  },
+  literario: {
+    tipo:'literario', region:'REGIÓN ANDINA', titulo:'Palabras que Enseñan',
+    desc:'Los Andes guardan leyendas, refranes y adivinanzas que han pasado de generación en generación. ¿Puedes descifrarlos?',
+    cat:'Folclor literario',
+    preguntas:[
+      { q:'Adivina: «Soy blanca como la leche, suave como la seda, me hago redonda y brillante de noche. ¿Quién soy?»',
+        opciones:['Una vela','La luna','Una flor','El sol'], correcta:1,
+        ok:'¡Exacto, es la luna! Las adivinanzas son parte esencial del folclor literario colombiano, transmitidas oralmente de abuelos a nietos.',
+        fail:'Era la luna. Las adivinanzas populares son folclor literario que desarrolla el ingenio y preserva el lenguaje poético colombiano.' },
+      { q:'¿Cuál es la leyenda colombiana que narra la historia de una mujer que llora por sus hijos cerca de ríos y lagos?',
+        opciones:['La Madremonte','La Llorona','El Hojarasquín','El Mohán'], correcta:1,
+        ok:'¡Correcto! La Llorona es una de las leyendas más conocidas de Colombia y América Latina, presente en múltiples regiones con variaciones locales.',
+        fail:'Era La Llorona. Una de las leyendas más extendidas del folclor colombiano, presente en casi todas las regiones con distintos simbolismos.' }
+    ]
+  },
+  inmaterial: {
+    tipo:'inmaterial', region:'REGIÓN PACÍFICO', titulo:'Tradiciones Vivas',
+    desc:'El folclor inmaterial son tradiciones, rituales y saberes que se viven y practican. Conoce dos manifestaciones únicas de Colombia.',
+    cat:'Folclor inmaterial',
+    preguntas:[
+      { q:'Las Fiestas de San Pacho en Quibdó son una celebración religiosa y cultural afrodescendiente. ¿Qué reconocimiento internacional tienen?',
+        opciones:['Premio Iberoamericano','Patrimonio Inmaterial de la UNESCO','Declaración del Congreso','Galardón OEA'], correcta:1,
+        ok:'¡Correcto! Las Fiestas de San Francisco de Asís en Quibdó fueron inscritas como Patrimonio Cultural Inmaterial de la Humanidad por la UNESCO en 2012.',
+        fail:'Son Patrimonio de la UNESCO desde 2012. Mezclan la fe católica con expresiones culturales afrodescendientes únicas del Chocó.' },
+      { q:'¿Cuál de estas prácticas culinarias tiene reconocimiento como patrimonio cultural inmaterial en Colombia?',
+        opciones:['La bandeja paisa','La changua bogotana','La cocina tradicional del Pacífico','El ajiaco santafereño'], correcta:2,
+        ok:'¡Muy bien! La cocina tradicional del Pacífico fue reconocida por su valor cultural inmaterial, preservando saberes ancestrales transmitidos oralmente.',
+        fail:'Es la cocina tradicional del Pacífico. Las prácticas culinarias afrocolombianas tienen reconocimiento especial por su valor como patrimonio inmaterial.' }
+    ]
+  }
+};
+
+let estado = { completados:{}, puntaje:0, aciertos:{} };
+let retoActual = null, preguntaIdx = 0;
+
+function crearEstrellas() {
+  const bg = document.getElementById('stars-bg');
+  for(let i=0;i<60;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random()*100+'%';
+    s.style.top = Math.random()*100+'%';
+    s.style.animationDelay = Math.random()*3+'s';
+    s.style.animationDuration = (2+Math.random()*2)+'s';
+    s.style.opacity = Math.random()*0.5+0.1;
+    bg.appendChild(s);
+  }
+}
+
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function comenzar() {
+  document.getElementById('hud').style.display = 'flex';
+  goScreen('s-mapa');
+}
+
+function actualizarHUD() {
+  document.getElementById('hud-pts').textContent = estado.puntaje;
+}
+
+function mostrarPuntosFlotantes(puntos, el) {
+  const r = el.getBoundingClientRect();
+  const p = document.createElement('div');
+  p.className = 'pts-popup';
+  p.textContent = '+' + puntos + ' PTS!';
+  p.style.left = (r.left + r.width/2 - 40) + 'px';
+  p.style.top = (r.top + window.scrollY - 20) + 'px';
+  document.body.appendChild(p);
+  setTimeout(()=>p.remove(), 1300);
+}
+
+function lanzarConfeti() {
+  const colores = ['#FFD600','#00C98B','#FF5733','#7C6FCD','#3D9BE9','#FF6FAE'];
+  for(let i=0;i<30;i++){
+    setTimeout(()=>{
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left = Math.random()*100+'vw';
+      c.style.top = '-10px';
+      c.style.background = colores[Math.floor(Math.random()*colores.length)];
+      c.style.animationDuration = (1+Math.random()*1.5)+'s';
+      c.style.animationDelay = Math.random()*0.5+'s';
+      c.style.transform = 'rotate('+Math.random()*360+'deg)';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 2500);
+    }, i*60);
+  }
+}
+
+function iniciarReto(tipo) {
+  if(estado.completados[tipo]) return;
+  retoActual = tipo;
+  preguntaIdx = 0;
+  const r = RETOS[tipo];
+  const band = document.getElementById('reto-band');
+  band.className = 'reto-header-band ' + tipo;
+  const pill = document.getElementById('reto-pill');
+  pill.textContent = r.cat;
+  pill.className = 'reto-cat-pill ' + tipo;
+  document.getElementById('reto-titulo').textContent = r.titulo;
+  document.getElementById('reto-desc').textContent = r.desc;
+  renderPregunta();
+  goScreen('s-reto');
+}
+
+function renderPregunta() {
+  const p = RETOS[retoActual].preguntas[preguntaIdx];
+  const total = RETOS[retoActual].preguntas.length;
+  const letras = ['A','B','C','D'];
+  document.getElementById('preg-num').textContent = 'PREGUNTA ' + (preguntaIdx+1) + ' DE ' + total;
+  document.getElementById('preg-q').textContent = p.q;
+  document.getElementById('opciones-wrap').innerHTML = p.opciones.map((o,i)=>
+    `<button class="opcion-btn" id="op-${i}" onclick="responder(${i})"><span class="opcion-letra">${letras[i]}</span>${o}</button>`
+  ).join('');
+  document.getElementById('feedback-wrap').innerHTML = '';
+  document.getElementById('btn-sig').style.display = 'none';
+}
+
+function responder(idx) {
+  const p = RETOS[retoActual].preguntas[preguntaIdx];
+  const total = RETOS[retoActual].preguntas.length;
+  document.querySelectorAll('.opcion-btn').forEach(b=>b.disabled=true);
+  const ok = idx === p.correcta;
+  document.getElementById('op-'+idx).classList.add(ok?'correct':'wrong');
+  if(!ok) document.getElementById('op-'+p.correcta).classList.add('correct');
+  if(ok) {
+    estado.puntaje += 10;
+    actualizarHUD();
+    const el = document.getElementById('op-'+idx);
+    mostrarPuntosFlotantes(10, el);
+    if(!estado.aciertos[retoActual]) estado.aciertos[retoActual] = 0;
+    estado.aciertos[retoActual]++;
+  }
+  document.getElementById('feedback-wrap').innerHTML = `
+    <div class="feedback-card ${ok?'ok':'fail'}">
+      <span class="fb-label ${ok?'ok':'fail'}">${ok?'✔ ¡CORRECTO!':'✖ NO EXACTAMENTE'}</span>
+      ${ok?p.ok:p.fail}
+    </div>`;
+  const btnSig = document.getElementById('btn-sig');
+  btnSig.style.display = 'block';
+  const esUltima = preguntaIdx === total-1;
+  btnSig.textContent = esUltima ? '▶ COMPLETAR PARADA' : '▶ SIGUIENTE RETO';
+}
+
+function siguienteAccion() {
+  const total = RETOS[retoActual].preguntas.length;
+  preguntaIdx++;
+  if(preguntaIdx < total) { renderPregunta(); }
+  else { completarReto(); }
+}
+
+function completarReto() {
+  estado.completados[retoActual] = true;
+  const card = document.getElementById('card-'+retoActual);
+  card.classList.add('done');
+  card.onclick = null;
+  const est = document.getElementById('estado-'+retoActual);
+  est.textContent = '✓ LISTO';
+  est.className = 'parada-estado done';
+  const aciertos = estado.aciertos[retoActual] || 0;
+  const starIdx = document.getElementById('star-'+retoActual+'-2');
+  if(aciertos >= 2 && starIdx) { starIdx.classList.add('active'); }
+  const total = Object.keys(estado.completados).length;
+  document.getElementById('prog-fill').style.width = (total/3*100)+'%';
+  document.getElementById('prog-text').textContent = total + ' / 3 PARADAS';
+  if(total === 3) {
+    lanzarConfeti();
+    document.getElementById('score-final').textContent = estado.puntaje;
+    setTimeout(()=>goScreen('s-final'), 600);
+  } else { goScreen('s-mapa'); }
+}
+
+function reiniciar() {
+  estado = { completados:{}, puntaje:0, aciertos:{} };
+  actualizarHUD();
+  ['musical','literario','inmaterial'].forEach(t=>{
+    const card = document.getElementById('card-'+t);
+    card.classList.remove('done');
+    card.onclick = ()=>iniciarReto(t);
+    const est = document.getElementById('estado-'+t);
+    est.textContent = 'JUGAR';
+    est.className = 'parada-estado pendiente';
+    const s2 = document.getElementById('star-'+t+'-2');
+    if(s2) s2.classList.remove('active');
+  });
+  document.getElementById('prog-fill').style.width = '0%';
+  document.getElementById('prog-text').textContent = '0 / 3 PARADAS';
+  goScreen('s-mapa');
+}
+
+crearEstrellas();
+</script>
+</body>
+</html>
